@@ -5,41 +5,22 @@ using UnityEngine;
 
 public class HorseHides : MonoBehaviour
 {
-    [SerializeField] private List<HorseColor> m_colors = new();
-    [SerializeField] private List<HorseMarking> m_markings = new();
-    public Sprite GetHorseSprite(string color)
+    [SerializeField] private List<Hide> m_hides = new();
+    public AnimationClip GetHorseClip(string id)
     {
-        Sprite sprite = null;
-        HorseColor horseColor = m_colors.FirstOrDefault(c => c.color == color);
+        AnimationClip clip = null;
+        Hide horseColor = m_hides.FirstOrDefault(c => c.id == id);
 
         if (horseColor != null)
-            sprite = horseColor.horseSprite;
+            clip = horseColor.clip;
 
-        return sprite;
-    }
-    
-    public Sprite GetMarkingSprite(string marking)
-    {
-        Sprite sprite = null;
-        HorseMarking horseMarking = m_markings.FirstOrDefault(c => c.marking == marking);
-
-        if (horseMarking != null)
-            sprite = horseMarking.markingSprite;
-
-        return sprite;
+        return clip;
     }
 
     [System.Serializable]
-    public class HorseColor
+    public class Hide
     {
-        public string color;
-        public Sprite horseSprite;
-    }
-
-    [System.Serializable]
-    public class HorseMarking
-    {
-        public string marking;
-        public Sprite markingSprite;
+        public string id;
+        public AnimationClip clip;
     }
 }

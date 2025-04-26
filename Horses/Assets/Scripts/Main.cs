@@ -10,6 +10,7 @@ public class Main : MonoBehaviour
     public static Main instance;
     public Web web;
     public HorseHides horseHides;
+    public HorsesManager horsesManager;
     public UserInfo userInfo;
     public Login login;
     public GameObject userProfile;

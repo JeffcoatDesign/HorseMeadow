@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.IO;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Networking;
 using static System.Net.WebRequestMethods;
@@ -89,12 +91,80 @@ public class Web : MonoBehaviour
         }
     }
 
+    public IEnumerator GetCoins(string userID, System.Action<int> callback)
+    {
+        WWWForm form = new();
+        form.AddField("loginUser", Main.instance.userInfo.username);
+        form.AddField("loginPass", Main.instance.userInfo.password);
+        form.AddField("userID", userID);
+
+        string uri = url + "GetUserCoins.php";
+        using (UnityWebRequest webRequest = UnityWebRequest.Post(uri, form))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            string[] pages = uri.Split('/');
+            int page = pages.Length - 1;
+
+            switch (webRequest.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError(pages[page] + ": Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError(pages[page] + ": HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
+
+                    if (int.TryParse(webRequest.downloadHandler.text, out int coins)) {
+                        callback.Invoke(coins);
+                    }
+                    else
+                        callback.Invoke(0);
+                    break;
+            }
+        }
+    }
+
+    public IEnumerator GetUsers(string userID)
+    {
+        WWWForm form = new();
+        form.AddField("userID", userID);
+
+        string uri = url + "GetUsers.php";
+        using (UnityWebRequest webRequest = UnityWebRequest.Post(uri, form))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            string[] pages = uri.Split('/');
+            int page = pages.Length - 1;
+
+            switch (webRequest.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError(pages[page] + ": Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError(pages[page] + ": HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
+                    break;
+            }
+        }
+    }
+
     public IEnumerator GetHorseIDs(string userID, System.Action<string> callback)
     {
         WWWForm form = new();
         form.AddField("userID", userID);
 
-        string uri = url + "GetHorseIDS.php";
+        string uri = url + "GetHorseIDs.php";
         using (UnityWebRequest webRequest = UnityWebRequest.Post(uri, form))
         {
             // Request and wait for the desired page.
@@ -157,11 +227,11 @@ public class Web : MonoBehaviour
         }
     }
 
-    public IEnumerator SellHorse(string userHorseID, string horseID, string userID)
+    public IEnumerator SellHorse(string userHorseID, string horseID, string userID, GameObject horseGO)
     {
         WWWForm form = new();
 
-        form.AddField("id", userHorseID);
+        form.AddField("ID", userHorseID);
         form.AddField("userID", userID);
         form.AddField("horseID", horseID);
 
@@ -185,6 +255,44 @@ public class Web : MonoBehaviour
                     break;
                 case UnityWebRequest.Result.Success:
                     Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
+
+                    if (webRequest.downloadHandler.text == "Success!")
+                        Main.instance.horsesManager.CreateHorses();
+
+                    break;
+            }
+        }
+    }
+    
+    public IEnumerator BuyHorse(string price, string horseID, string userID, Action<string> buyHorseCallback)
+    {
+        WWWForm form = new();
+
+        form.AddField("price", price);
+        form.AddField("userID", userID);
+        form.AddField("horseID", horseID);
+
+        string uri = url + "BuyHorse.php";
+        using (UnityWebRequest webRequest = UnityWebRequest.Post(uri, form))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            string[] pages = uri.Split('/');
+            int page = pages.Length - 1;
+
+            switch (webRequest.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError(pages[page] + ": Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError(pages[page] + ": HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
+                    buyHorseCallback.Invoke(webRequest.downloadHandler.text);
                     break;
             }
         }
